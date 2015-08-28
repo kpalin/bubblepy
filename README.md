@@ -3,8 +3,7 @@ Bubble Babble Binary Data Encoding - Python library
 
 See http://bohwaz.net/archives/web/Bubble_Babble.html for details.
 
-Original Copyright 2011 BohwaZ - http://bohwaz.net/
-
+Original Copyright 2011 BohwaZ - http://bohwaz.net/  
 Copyleft 2015 europa - https://github.com/eur0pa
 
 Based on :
