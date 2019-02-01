@@ -1,4 +1,4 @@
-#!/usr/bin/python2
+#!/usr/bin/env python
 
 """
     Bubble Babble Binary Data Encoding - Python library
@@ -54,15 +54,15 @@ class BubbleBabble(object):
         out = 'x'
         c = 1
 
-        for i in xrange(0, len(src) + 1, 2):
+        for i in range(0, len(src) + 1, 2):
             if i >= len(src):
-                out += self.vowels[c % 6] + self.consonants[16] + self.vowels[c / 6]
+                out += self.vowels[c % 6] + self.consonants[16] + self.vowels[c // 6]
                 break
 
             byte1 = ord(src[i])
             out += self.vowels[(((byte1 >> 6) & 3) + c) % 6]
             out += self.consonants[(byte1 >> 2) & 15]
-            out += self.vowels[((byte1 & 3) + (c / 6)) % 6]
+            out += self.vowels[((byte1 & 3) + (c // 6)) % 6]
 
             if (i + 1) >= len(src):
                 break
@@ -104,7 +104,7 @@ class BubbleBabble(object):
                     if tup[0] != c % 6:
                         raise BubbleBabble_Exception("corrupt string at offset %d (checksum)" % pos)
 
-                    if tup[2] != int(c / 6):
+                    if tup[2] != int(c // 6):
                         raise BubbleBabble_Exception("corrupt string at offset %d (checksum)" % (pos + 2))
                 else:
                     byte = self._decode_3way_byte(tup[0], tup[1], tup[2], pos, c)
@@ -152,7 +152,7 @@ class BubbleBabble(object):
             raise BubbleBabble_Exception("corrupt string at offset %d" % (offset + 1))
 
         mid4 = a2
-        low2 = (a3 - (c / 6 % 6) + 6) % 6
+        low2 = (a3 - (c // 6 % 6) + 6) % 6
 
         if low2 >= 4:
             raise BubbleBabble_Exception("corrupt string at offset %d" % (offset + 2))
@@ -173,10 +173,10 @@ if __name__ == '__main__':
         'Pineapple': 'xigak-nyryk-humil-bosek-sonax',
     }
 
-    for src, expected in tests.items():
+    for src, expected in list(tests.items()):
         res = bb.encode(src)
         assert res == expected
         res = bb.decode(res)
         assert res == src
 
-    print 'tests passed'
+    print('tests passed')
