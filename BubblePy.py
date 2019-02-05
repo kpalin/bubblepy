@@ -42,11 +42,18 @@ class BubbleBabble_Exception(Exception):
     """ exception handler for BubbleBabble class """
     pass
 
+def int_to_bytes(x):
+    return x.to_bytes((x.bit_length() + 7) // 8, 'big')
+
+def int_from_bytes(xbytes):
+    return int.from_bytes(xbytes, 'big')
+
 
 class BubbleBabble(object):
     """ encodes or decodes to and from bubblebabble """
     def __init__(self):
         super(BubbleBabble, self).__init__()
+        self.coding = "latin1"
         self.vowels = 'aeiouy'
         self.consonants = 'bcdfghklmnprstvzx'
 
@@ -54,12 +61,17 @@ class BubbleBabble(object):
         out = 'x'
         c = 1
 
+        if isinstance(src, int):
+            src = int_to_bytes(src)
+        elif isinstance(src, str):
+            src = bytes(src,self.coding)
+
         for i in range(0, len(src) + 1, 2):
             if i >= len(src):
                 out += self.vowels[c % 6] + self.consonants[16] + self.vowels[c // 6]
                 break
 
-            byte1 = ord(src[i])
+            byte1 = src[i]
             out += self.vowels[(((byte1 >> 6) & 3) + c) % 6]
             out += self.consonants[(byte1 >> 2) & 15]
             out += self.vowels[((byte1 & 3) + (c // 6)) % 6]
@@ -67,7 +79,7 @@ class BubbleBabble(object):
             if (i + 1) >= len(src):
                 break
 
-            byte2 = ord(src[i + 1])
+            byte2 = src[i + 1]
             out += self.consonants[(byte2 >> 4) & 15]
             out += '-'
             out += self.consonants[byte2 & 15]
@@ -78,7 +90,7 @@ class BubbleBabble(object):
 
         return out
 
-    def decode(self, src):
+    def decode(self, src,ret_int=False):
         c = 1
 
         if src[0] is not 'x':
@@ -118,7 +130,10 @@ class BubbleBabble(object):
 
                     c = (c * 5 + byte1 * 7 + byte2) % 36
 
-        return out
+        if ret_int:
+            return int_from_bytes(bytes(out,self.coding))
+        else:
+            return out
 
     def _decode_tuple(self, src, pos):
         tupl = [self.vowels.index(src[0]),
@@ -178,5 +193,33 @@ if __name__ == '__main__':
         assert res == expected
         res = bb.decode(res)
         assert res == src
+
+
+    tests = {
+        0: 'xexax',
+        1: 'xebex',
+        127: 'xizox',
+        128: 'xobax',
+        129: 'xobex',
+        255: 'xuzox',
+        256:'xebeb-baxix',
+        0xffffff:'xuzoz-zizex',
+        0xffffff+1:'xebeb-babib-baxux',
+        0xabcdef: 'xopos-tarox'
+    }
+
+    babble_set = {}
+    int_set = {}
+    for i in range(200000):
+        res = bb.encode(i)
+        print(i,len(res),res)
+        assert res not in babble_set, "encode({}) = {} = encode({})".format(i,res,babble_set[res])
+        babble_set[res] = i
+
+    for src, expected in list(tests.items()):
+        res_enc = bb.encode(src)
+        assert res_enc == expected
+        res = bb.decode(expected, ret_int=True)
+        assert res == src,"decode('{}',True) = {} != {}   {} = encode({})".format(expected,res,src,res_enc,src)
 
     print('tests passed')
